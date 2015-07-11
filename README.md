@@ -1,14 +1,15 @@
 vagrant-hadoop-2.6.0, Hive and Pig
-================================
+==================================
 
 Introduction
 ============
+
 Vagrant project to spin up a cluster of 4 virtual machines with Hadoop v2.6.0 and apache hive and pig clients in data nodes
 
-1.	node1 : HDFS NameNode 
+1.	node1 : HDFS NameNode
 2.	node2 : YARN ResourceManager + JobHistoryServer + ProxyServer
-3.	node3 : HDFS DataNode + YARN NodeManager 
-4.	node4 : HDFS DataNode + YARN NodeManager 
+3.	node3 : HDFS DataNode + YARN NodeManager
+4.	node4 : HDFS DataNode + YARN NodeManager
 
 Getting Started
 ===============
@@ -46,11 +47,10 @@ Post Provisioning
 
 You don't need to do any post provisioning. This vagrant setup performs following steps
 
- - Name node formating 
- - Starts name node daemon on node1 
- - Starts data nodes from node1 
- - Start yarn daemons(resource manager, node manager,
-   proxy server, history server) on node2
+-	Name node formating
+-	Starts name node daemon on node1
+-	Starts data nodes from node1
+-	Start yarn daemons(resource manager, node manager, proxy server, history server) on node2
 
 ### Test YARN
 
@@ -87,7 +87,7 @@ The Vagrant box is downloaded to the ~/.vagrant.d/boxes directory. On Windows, t
 References
 ==========
 
-This project was kludge together with great pointers from all around the internet. All references made inside the files themselves.
+This project was kludge together with great pointers from all around the internet. All references made inside the files themselves. Special thanks to [vangj](https://github.com/vangj/vagrant-hadoop-2.4.1-spark-1.0.1) from where I cloned this project to further develop.
 
 Copyright Stuff
 ===============
