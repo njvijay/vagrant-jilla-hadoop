@@ -87,7 +87,7 @@ The Vagrant box is downloaded to the ~/.vagrant.d/boxes directory. On Windows, t
 References
 ==========
 
-This project was kludge together with great pointers from all around the internet. All references made inside the files themselves. Special thanks to [vangj](https://github.com/vangj/vagrant-hadoop-2.4.1-spark-1.0.1) from where I cloned this project to further develop.
+This project was kludge together with great pointers from all around the internet. All references made inside the files themselves. Special thanks to [vangj](https://github.com/vangj/vagrant-hadoop-2.4.1-spark-1.0.1) from where I cloned this project for further development.
 
 Copyright Stuff
 ===============
