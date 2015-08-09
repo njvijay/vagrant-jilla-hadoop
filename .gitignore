@@ -1,3 +1,4 @@
 resources/*.tar.gz
 .DS_store
 resources/.DS_store
+data
