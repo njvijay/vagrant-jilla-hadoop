@@ -6,3 +6,5 @@ $HADOOP_PREFIX/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR --script hdfs sta
 $HADOOP_PREFIX/sbin/hadoop-daemons.sh --config $HADOOP_CONF_DIR --script hdfs start datanode
 #Run yarn daemons in node2
 ssh node2 bash /vagrant/scripts/setup-yarn.sh
+#Start spark daemons in node1. Please comment out if you don't need spark in the cluster
+$SPARK_HOME/sbin/start-all.sh
