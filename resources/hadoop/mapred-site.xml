@@ -29,4 +29,9 @@
   <name>mapreduce.jobhistory.done-dir</name>
   <value>/var/hadoop/mr-history/done</value>
  </property>
+ <property>
+  <name>mapreduce.jobhistory.address</name>
+  <value>node2:10020</value>
+  <description>Host and port for Job History Server (default 0.0.0.0:10020)</description>
+</property>
 </configuration>
