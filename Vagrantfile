@@ -2,7 +2,7 @@ Vagrant.require_version ">= 1.4.3"
 VAGRANTFILE_API_VERSION = "2"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
-	numNodes = 4
+	numNodes = 5
 	r = numNodes..1
 	(r.first).downto(r.last).each do |i|
 		config.vm.define "node#{i}" do |node|
@@ -47,21 +47,24 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 			node.vm.provision "shell", path: "scripts/setup-hadoop.sh"
 			node.vm.provision "shell" do |s|
 				s.path = "scripts/setup-hadoop-slaves.sh"
-				s.args = "-s 3 -t #{numNodes}"
-			end
-			#node.vm.provision "shell", path: "scripts/setup-spark.sh"
-			#node.vm.provision "shell" do |s|
-				#s.path = "scripts/setup-spark-slaves.sh"
 				#s.args = "-s 3 -t #{numNodes}"
-			#end
+				#Changing all nodes as slave nodes. Uncomment above line if you want to keep namenode, yarn as separate VM
+				s.args = "-s 2 -t #{numNodes}"
+			end
+			#Setup spark
+			node.vm.provision "shell", path: "scripts/setup-spark.sh"
+			node.vm.provision "shell" do |s|
+				s.path = "scripts/setup-spark-slaves.sh"
+				s.args = "-s 2 -t #{numNodes}"
+			end
 			#Setup pig & hive client in datanodes
-			if i > 2
+			if i > 1
 				node.vm.provision "shell" do |s|
 					s.path = "scripts/setup-hive.sh"
 				end
 			end
 
-			if i > 2
+			if i > 1
 				node.vm.provision "shell" do |s|
 					s.path = "scripts/setup-pig.sh"
 				end
