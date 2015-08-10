@@ -1,15 +1,16 @@
-vagrant-hadoop-2.6.0, Hive and Pig
-==================================
+vagrant-hadoop-2.6.0 with Spark 1.4.1 and Hive,Pig clients
+==========================================================
 
 Introduction
 ============
 
-Vagrant project to spin up a cluster of 4 virtual machines with Hadoop v2.6.0 and apache hive and pig clients in data nodes
+Vagrant project to spin up a cluster of 5 virtual machines with Hadoop v2.6.0, Spark 1.4.1 and apache hive and pig clients in data nodes
 
-1.	node1 : HDFS NameNode
-2.	node2 : YARN ResourceManager + JobHistoryServer + ProxyServer
-3.	node3 : HDFS DataNode + YARN NodeManager
-4.	node4 : HDFS DataNode + YARN NodeManager
+1.	node1 : HDFS NameNode + Spark Master
+2.	node2 : HDFS Data Node + YARN ResourceManager + JobHistoryServer + ProxyServer + Spark slave
+3.	node3 : HDFS DataNode + YARN NodeManager + Spark Slave
+4.	node4 : HDFS DataNode + YARN NodeManager + Spark slave
+5.	node5 : HDFS DataNode + YARN NodeManager + Spark Slave
 
 Getting Started
 ===============
@@ -26,19 +27,19 @@ Some gotcha's.
 
 1.	Make sure you download Vagrant v1.4.3 or higher.
 2.	Make sure when you clone this project, you preserve the Unix/OSX end-of-line (EOL) characters. The scripts will fail with Windows EOL characters.
-3.	Make sure you have 4Gb of free memory for the VM. You may change the Vagrantfile to specify smaller memory requirements.
+3.	Make sure you have 10Gb of free memory for the VM. You may change the Vagrantfile to specify smaller memory requirements.
 4.	This project has NOT been tested with the VMWare provider for Vagrant.
 5.	You may change the script (common.sh) to point to a different location for Hadoop , pig and hive to be downloaded from. Here is a list of mirrors for Hadoop: http://www.apache.org/dyn/closer.cgi/hadoop/common/.
 
 Advanced Stuff
 ==============
 
-If you have the resources (CPU + Disk Space + Memory), you may modify Vagrantfile to have even more HDFS DataNodes, YARN NodeManagers, and Spark slaves. Just find the line that says "numNodes = 4" in Vagrantfile and increase that number. The scripts should dynamically provision the additional slaves for you.
+If you have the resources (CPU + Disk Space + Memory), you may modify Vagrantfile to have even more HDFS DataNodes, YARN NodeManagers, and Spark slaves. Just find the line that says "numNodes = 5" in Vagrantfile and increase that number. The scripts should dynamically provision the additional slaves for you.
 
 Make the VMs setup faster
 =========================
 
-You can make the VM setup even faster if you pre-download the Hadoop, pig, hive into the /resources directory.
+You can make the VM setup even faster if you pre-download the Hadoop, spark, pig, hive into the /resources directory. Please make sure version matches according to common.sh
 
 The setup script will automatically detect if these files (with precisely the same names) exist and use them instead. If you are using slightly different versions, you will have to modify the script accordingly.
 
@@ -49,8 +50,9 @@ You don't need to do any post provisioning. This vagrant setup performs followin
 
 -	Name node formating
 -	Starts name node daemon on node1
--	Starts data nodes from node1
--	Start yarn daemons(resource manager, node manager, proxy server, history server) on node2
+-	Starts data nodes from node2
+-	Starts yarn daemons(resource manager, node manager, proxy server, history server) on node2
+-	Starts spark master and spark salves
 
 ### Test YARN
 
@@ -60,10 +62,81 @@ Run the following command to make sure you can run a MapReduce job.
 yarn jar /usr/local/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.6.0.jar pi 2 100
 ```
 
+### Test Spark
+
+You can test if spark run on YARN by issuing following command
+
+```
+$SPARK_HOME/bin/spark-submit --class org.apache.spark.examples.SparkPi \
+    --master yarn \
+    --num-executors 10 \
+    --executor-cores 2 \
+    $SPARK_HOME/lib/spark-examples*.jar \
+    100
+```
+
+Also, you can test code directly on Spark.
+
+```
+$SPARK_HOME/bin/spark-submit --class org.apache.spark.examples.SparkPi \
+    --master spark://node1:7077 \
+    --num-executors 5 \
+    --executor-cores 1 \
+    $SPARK_HOME/lib/spark-examples*.jar \
+    100
+```
+
+I have set 'executor-cores' = 1. It is going to occupy total 4 cores one from each executors. You can adjust executor-cores according to your machine configuration. Also, make sure you don't over setup these values. Otherwise, you hit with following issue
+
+```
+WARN TaskSchedulerImpl: Initial job has not accepted any resources; check your cluster ui
+to ensure that workers are registered and have sufficient memory
+```
+
+Here is the quick guide to troubleshoot your spark setup
+
+[http://www.datastax.com/dev/blog/common-spark-troubleshooting](http://www.datastax.com/dev/blog/common-spark-troubleshooting)
+
+### Test Spark using Shell
+
+Start the Spark shell using the following command.
+
+```
+$SPARK_HOME/bin/spark-shell --master spark://node1:7077
+```
+
+Run following piece of code in the spark shell to make sure everything works as expected.
+
+```
+sc.parallelize(1 until 10000).count
+sc.parallelize(1 until 10000).map( x => (x%30,x)).groupByKey().count
+```
+
+### Test Spark SQL using Shell
+
+This vagrant setup is linked with hive metastore. Vagrant setup takes care of copying hive-site.xml into spark conf dir. It provides an opportunity to work with Spark sql and hive seamlessly. CLASSPATH includes mysql jdbc jar file and classpath is exported via spark/spark.sh.
+
+To test the interoperability between hive and spark sql, first bring up hive prompt and create 'test' table with few inserts
+
+```
+create table test (i int);
+insert into test values (10);
+insert into test values (33);
+
+```
+
+Then, open up spark shell as mentioned above. Spark shell exports sqlContext by default. Just run the following commands in spark-shell to make sure everything works as expected.
+
+```
+sqlContext.sql("show databases").collect().foreach(println);
+sqlContext.sql("show tables").collect().foreach(println);
+sqlContext.sql("select * from test").collect().foreach(println);
+```
+
 Apache Pig and Hive
 -------------------
 
-Apache pig and hive setup is available in all the data nodes. Basically data nodes start from node3
+Apache pig and hive setup is available in all the data nodes. Basically data nodes start from node2
 
 Web UI
 ======
@@ -73,6 +146,7 @@ You can check the following URLs to monitor the Hadoop daemons.
 1.	[NameNode](http://10.211.55.101:50070/dfshealth.html)
 2.	[ResourceManager](http://10.211.55.102:8088/cluster)
 3.	[JobHistory](http://10.211.55.102:19888/jobhistory)
+4.	[Spark](http://10.211.55.101:8080)
 
 Vagrant boxes
 =============
